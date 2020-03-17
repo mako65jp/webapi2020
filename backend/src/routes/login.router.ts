@@ -3,7 +3,6 @@ import { Varidation, Authentication } from '../utils/authenticate';
 
 const loginRouter = Router();
 
-loginRouter
-    .post('/', Varidation(), Authentication());
+loginRouter.post('/', Varidation(), Authentication());
 
 export default loginRouter;

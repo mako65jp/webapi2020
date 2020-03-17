@@ -65,6 +65,6 @@ export class UsersController {
   }
 
   public logout(_req: Request, res: Response): void {
-    res.set('x-access-token', undefined).redirect('/login');
+    res.redirect('/login');
   }
 }

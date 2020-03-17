@@ -17,7 +17,7 @@ export const tokenGuard = () => {
     if (!payload) {
       // if token valid -> save token to request for use in other routes
       req.headers.payload = payload;
-      
+
       res.status(404).send({ success: false, message: 'No token provided.' });
       return;
     }

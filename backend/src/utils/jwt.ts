@@ -1,10 +1,14 @@
 import * as jwt from 'jsonwebtoken';
 
 const _superSecret = 'superSecret';
-const options: jwt.SignOptions = { algorithm: 'HS256', expiresIn: 120 };
+const jwtOptions: jwt.SignOptions = { algorithm: 'HS256', expiresIn: 120 };
+
+export const ExpirationTime = () => {
+  return new Date().getMilliseconds() + Number(jwtOptions.expiresIn);
+};
 
 export const Sign = (payload: object) => {
-  return jwt.sign(payload, _superSecret, options);
+  return jwt.sign(payload, _superSecret, jwtOptions);
 };
 
 export const Verify = (token: string) => {

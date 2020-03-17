@@ -53,10 +53,11 @@ export const Authentication = () => {
 
       const user = users[0];
       if (user.comparePassword(userPass)) {
+        user.setExprationTime().save();
         res.json({
           success: true,
           message: 'Authentication successfully finished',
-          token: Sign({ email: email }),
+          token: Sign({ email: email, isAdmin: user.isAdmin }),
         });
       } else {
         // 404 Not Found

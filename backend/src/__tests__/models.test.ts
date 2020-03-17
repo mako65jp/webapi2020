@@ -43,9 +43,7 @@ describe('User controller', () => {
     );
     expect(postedUser.status).toBe(200);
     expect(postedUser.body.email).toBe(requestUser.email);
-    expect(
-      postedUser.body.comparePassword(requestUser.password),
-    ).toBeTruthy();
+    expect(postedUser.body.comparePassword(requestUser.password)).toBeTruthy();
     done();
   });
 });

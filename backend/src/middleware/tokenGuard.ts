@@ -13,7 +13,8 @@ export const tokenGuard = () => {
       return;
     }
 
-    if (!Verify(token)) {
+    const payload = Verify(token) as string | undefined;
+    if (!payload) {
       res.status(404).send({ success: false, message: 'No token provided.' });
       return;
     }

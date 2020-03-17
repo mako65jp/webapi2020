@@ -1,4 +1,4 @@
-import { GenerateHash, CompareHash } from './../utils/bcript';
+import { GenerateHash } from './../utils/bcript';
 import database from '../config/database';
 import * as supertest from 'supertest';
 import app from '../app';
@@ -44,7 +44,7 @@ describe('User controller', () => {
     expect(postedUser.status).toBe(200);
     expect(postedUser.body.email).toBe(requestUser.email);
     expect(
-      CompareHash(requestUser.password, postedUser.body.password),
+      postedUser.body.comparePassword(requestUser.password),
     ).toBeTruthy();
     done();
   });

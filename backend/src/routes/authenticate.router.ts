@@ -9,4 +9,5 @@ authenticateRouter
     // 501 Not Implemented
     res.sendStatus(501);
   });
+
 export default authenticateRouter;

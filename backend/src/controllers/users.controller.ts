@@ -63,4 +63,8 @@ export class UsersController {
       .then(() => res.status(204).json({ data: 'success' }))
       .catch((err: Error) => res.status(500).json(err));
   }
+
+  public logout(_req: Request, res: Response): void {
+    res.set('x-access-token', undefined).redirect('/login');
+  }
 }

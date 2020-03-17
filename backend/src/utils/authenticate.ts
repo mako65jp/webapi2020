@@ -38,7 +38,7 @@ export const Authentication = () => {
       const email = req.body['email'];
       const userPass = req.body['password'];
 
-      const users = await User.findAll({
+      const users = await User.scope('login').findAll({
         where: { email: email },
       });
 
@@ -52,7 +52,7 @@ export const Authentication = () => {
       }
 
       const user = users[0];
-      if (user.password && user.password === userPass) {
+      if (user.comparePassword(userPass)) {
         res.json({
           success: true,
           message: 'Authentication successfully finished',

@@ -15,4 +15,7 @@ usersRouter
   .put(usersController.update)
   .delete(usersController.delete);
 
+usersRouter.route('/:id/logout')
+  .get(usersController.logout);
+
 export default usersRouter;

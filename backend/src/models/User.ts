@@ -1,15 +1,13 @@
-import { CorrectPassword } from './../utils/bcript';
 import {
-  DefaultScope,
-  Scopes,
-  Model,
-  Table,
-  Column,
   AllowNull,
+  Column,
+  DefaultScope,
+  Model,
+  Scopes,
+  Table,
   Unique,
 } from 'sequelize-typescript';
-
-import { GeneratePasswordHash } from '../utils/bcript';
+import { CompareHash, GenerateHash } from './../utils/bcript';
 
 @DefaultScope({
   attributes: {
@@ -27,7 +25,6 @@ import { GeneratePasswordHash } from '../utils/bcript';
 @Table({
   tableName: 'Users',
   timestamps: true,
-  paranoid: true,
   hooks: {
     beforeSave: async function(user: User) {
       user.set('password', await User.passwordToHash(user.password));
@@ -44,33 +41,11 @@ export class User extends Model<User> {
   @Column
   password!: string;
 
-  async validPassword(password: string) {
-    return await CorrectPassword(password, this.password);
+  async comparePassword(password: string) {
+    return await CompareHash(password, this.password);
   }
 
   static async passwordToHash(password: string) {
-    return await GeneratePasswordHash(password);
-  }
-
-  //   @CreatedAt
-  //   @Column
-  //   createdAt!: Date;
-
-  //   @UpdatedAt
-  //   @Column
-  //   updatedAt!: Date;
-
-  // comparePassword(password: string): boolean {
-  //   // 省略
-  // }
-
-  // static passwordToHash(password: string, salt?: string): string {
-  //   // 省略
-  // }
-
-  static verifyToken(token: string) {
-    // TODO:
-
-    return true;
+    return await GenerateHash(password);
   }
 }

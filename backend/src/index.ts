@@ -1,8 +1,8 @@
 /**
  * Required External Modules
  */
-import database from './config/database';
 import app from './app';
+import database from './config/database';
 
 // Connect Database
 database.sync({ force: true }).then(

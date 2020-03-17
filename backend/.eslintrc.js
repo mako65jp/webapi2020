@@ -20,6 +20,7 @@ module.exports = {
   },
   plugins: ['jest'],
   rules: {
-    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-use-before-define': 'warn',
   },
 };

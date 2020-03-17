@@ -1,4 +1,4 @@
-import { GeneratePasswordHash, CorrectPassword } from './../utils/bcript';
+import { GenerateHash, CompareHash } from './../utils/bcript';
 import database from '../config/database';
 import * as supertest from 'supertest';
 import app from '../app';
@@ -11,10 +11,7 @@ describe('User controller', () => {
     await User.bulkCreate([
       {
         email: 'aaa@abc.com',
-        password: await GeneratePasswordHash('bbb'),
-        // createdAt: new Date(),
-        // updatedAt: new Date(),
-        // deletedAt: null,
+        password: await GenerateHash('bbb'),
       },
     ]);
     done();
@@ -47,7 +44,7 @@ describe('User controller', () => {
     expect(postedUser.status).toBe(200);
     expect(postedUser.body.email).toBe(requestUser.email);
     expect(
-      CorrectPassword(requestUser.password, postedUser.body.password),
+      CompareHash(requestUser.password, postedUser.body.password),
     ).toBeTruthy();
     done();
   });

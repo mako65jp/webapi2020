@@ -9,10 +9,21 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       email: {
+        allowNull: false,
+        unique: true,
         type: Sequelize.STRING,
       },
       password: {
+        allowNull: false,
         type: Sequelize.STRING,
+      },
+      isAdmin: {
+        allowNull: false,
+        type: Sequelize.BOOLEAN,
+      },
+      exp: {
+        allowNull: false,
+        type: Sequelize.DATE,
       },
       createdAt: {
         allowNull: false,
@@ -20,10 +31,6 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-      },
-      deletedAt: {
-        allowNull: true,
         type: Sequelize.DATE,
       },
     });

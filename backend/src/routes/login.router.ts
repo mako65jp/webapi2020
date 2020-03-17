@@ -1,8 +1,13 @@
 import { Router } from 'express';
-import { Varidation, Authentication } from '../utils/authenticate';
+import { Authentication, Varidation } from '../utils/authenticate';
 
 const loginRouter = Router();
 
-loginRouter.post('/', Varidation(), Authentication());
+loginRouter
+  .post('/', Varidation(), Authentication())
+  .all('/', (_req, res, _next) => {
+    // 501 Not Implemented
+    res.sendStatus(501);
+  });
 
 export default loginRouter;

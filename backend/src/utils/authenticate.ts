@@ -52,7 +52,7 @@ export const Authentication = () => {
       }
 
       const user = users[0];
-      if (user.comparePassword(userPass)) {
+      if (await user.comparePassword(userPass)) {
         user.setExprationTime().save();
         res.json({
           success: true,

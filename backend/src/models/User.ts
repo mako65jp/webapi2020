@@ -1,15 +1,15 @@
 import {
   AllowNull,
   Column,
+  Default,
   DefaultScope,
   Model,
   Scopes,
   Table,
   Unique,
-  Default,
 } from 'sequelize-typescript';
-import { CompareHash, GenerateHash } from './../utils/bcript';
 import { ExpirationTime } from '../utils/jwt';
+import { CompareHash, GenerateHash } from './../utils/bcript';
 
 @DefaultScope({
   attributes: {
@@ -48,15 +48,22 @@ export class User extends Model<User> {
   @Column
   isAdmin!: boolean;
 
+  @AllowNull(true)
+  @Default(new Date(0))
   @Column
-  exp!: number;
+  exp!: Date;
 
-  async comparePassword(password: string) {
-    return await CompareHash(password, this.password);
+  comparePassword(password: string) {
+    return CompareHash(password, this.password);
   }
 
   setExprationTime() {
-    this.exp = ExpirationTime();
+    this.exp.setDate(ExpirationTime());
+    return this;
+  }
+
+  clearExprationTime() {
+    this.exp.setDate(0);
     return this;
   }
 

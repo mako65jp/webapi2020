@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UpdateOptions, DestroyOptions } from 'sequelize';
+import { DestroyOptions, UpdateOptions } from 'sequelize';
 import { User } from '../models/User';
 
 export class UsersController {

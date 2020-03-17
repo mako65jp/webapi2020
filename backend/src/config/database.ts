@@ -1,6 +1,6 @@
+import 'reflect-metadata';
 import { Sequelize } from 'sequelize-typescript';
 import env from './env';
-import 'reflect-metadata';
 
 const url =
   env.dialect +

@@ -1,10 +1,8 @@
+import * as cors from 'cors';
 import * as express from 'express';
 import * as helmet from 'helmet';
-import * as cors from 'cors';
-
 import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
-
 import router from './routes';
 
 class App {

@@ -58,16 +58,20 @@ export const Authentication = () => {
         return;
       }
 
-      const user = users[0];
+      const user = new User(users[0]);
       if (await user.comparePassword(userPass)) {
-        const token = generateToken({ email: email, isAdmin: user.isAdmin });
+        const token = generateToken({
+          id: users[0].id,
+          email: email,
+          isAdmin: user.isAdmin,
+        });
         const exprationTime = getExprationTime(decodeToken(token));
         user.setExprationTime(exprationTime).save();
 
         if (exprationTime > 0) {
           res.json({
             success: true,
-            message: 'Authentication successfully finished',
+            message: 'Authentication successfully finished.',
             token: token,
           });
           return;

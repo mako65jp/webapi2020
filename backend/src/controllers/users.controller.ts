@@ -7,12 +7,8 @@ export class UsersController {
     const scope = req.query['scope'] || 'defaultScope';
     User.scope(scope)
       .findAll<User>({})
-      .then((users: Array<User>) => {
-        res.json(users);
-      })
-      .catch((err: Error) => {
-        res.status(500).json(err);
-      });
+      .then((users: Array<User>) => res.json(users))
+      .catch((err: Error) => res.status(500).json(err));
   }
 
   public create(req: Request, res: Response): void {
@@ -40,10 +36,7 @@ export class UsersController {
 
   public update(req: Request, res: Response): void {
     const userId = Number(req.params.id);
-    const update: UpdateOptions = {
-      where: { id: userId },
-      limit: 1,
-    };
+    const update: UpdateOptions = { where: { id: userId }, limit: 1 };
 
     const scope = req.query['scope'] || 'defaultScope';
     User.scope(scope)
@@ -64,7 +57,18 @@ export class UsersController {
       .catch((err: Error) => res.status(500).json(err));
   }
 
-  public logout(_req: Request, res: Response): void {
-    res.redirect('/login');
+  public logout(req: Request, res: Response): void {
+    if (!req.headers.payload) {
+      res.redirect('/login');
+      return;
+    }
+
+    const payload = req.headers.payload as any;
+    const userId = Number(payload.id);
+    const update: UpdateOptions = { where: { id: userId }, limit: 1 };
+
+    User.update({ exp: new Date(0) }, update)
+      .then(() => res.redirect('/login'))
+      .catch((err: Error) => res.status(500).json(err));
   }
 }

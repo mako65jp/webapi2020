@@ -6,23 +6,15 @@ import {
   Model,
   Scopes,
   Table,
-  Unique,
 } from 'sequelize-typescript';
-import { ExpirationTime } from '../utils/jwt';
-import { CompareHash, GenerateHash } from './../utils/bcript';
+import { compareHash, generateHash } from './../utils/bcript';
 
 @DefaultScope({
-  attributes: {
-    exclude: ['password'],
-  },
+  attributes: { exclude: ['password'] },
   order: [['id', 'ASC']],
 })
 @Scopes({
-  login: {
-    attributes: {
-      include: ['password'],
-    },
-  },
+  login: { attributes: { include: ['password'] } },
 })
 @Table({
   tableName: 'Users',
@@ -34,7 +26,6 @@ import { CompareHash, GenerateHash } from './../utils/bcript';
   },
 })
 export class User extends Model<User> {
-  @Unique
   @AllowNull(false)
   @Column
   email!: string;
@@ -54,20 +45,15 @@ export class User extends Model<User> {
   exp!: Date;
 
   comparePassword(password: string) {
-    return CompareHash(password, this.password);
+    return compareHash(password, this.password);
   }
 
-  setExprationTime() {
-    this.exp.setDate(ExpirationTime());
-    return this;
-  }
-
-  clearExprationTime() {
-    this.exp.setDate(0);
+  setExprationTime(exprationTime: number) {
+    this.setDataValue('exp', new Date(exprationTime));
     return this;
   }
 
   static async passwordToHash(password: string) {
-    return await GenerateHash(password);
+    return await generateHash(password);
   }
 }

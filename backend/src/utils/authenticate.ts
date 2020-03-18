@@ -1,6 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/User';
-import { Sign } from './jwt';
+import { generateToken, decodeToken } from './jwt';
+
+const getExprationTime = (payload: any) => {
+  if (!payload || !payload.exp) {
+    return 0;
+  }
+  return payload.exp * 1000;
+};
 
 export const Varidation = () => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -53,21 +60,41 @@ export const Authentication = () => {
 
       const user = users[0];
       if (await user.comparePassword(userPass)) {
-        user.setExprationTime().save();
-        res.json({
-          success: true,
-          message: 'Authentication successfully finished',
-          token: Sign({ email: email, isAdmin: user.isAdmin }),
-        });
-      } else {
-        // 404 Not Found
-        res.status(404).json({
-          success: false,
-          message: 'Authentication failed.',
-        });
+        const token = generateToken({ email: email, isAdmin: user.isAdmin });
+        const exprationTime = getExprationTime(decodeToken(token));
+        user.setExprationTime(exprationTime).save();
+
+        if (exprationTime > 0) {
+          res.json({
+            success: true,
+            message: 'Authentication successfully finished',
+            token: token,
+          });
+          return;
+        }
       }
+
+      // 404 Not Found
+      res.status(404).json({
+        success: false,
+        message: 'Authentication failed.',
+      });
     } catch (e) {
       next(e);
     }
   };
+};
+
+export const VerifyToken = (token: string) => {
+  const payload = decodeToken(token);
+  if (!payload) {
+    return;
+  }
+
+  const exp = getExprationTime(payload);
+  if (exp > new Date().valueOf()) {
+    return payload;
+  }
+
+  return;
 };

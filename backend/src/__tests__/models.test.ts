@@ -2,7 +2,7 @@ import * as supertest from 'supertest';
 import app from '../app';
 import database from '../config/database';
 import { User } from '../models/User';
-import { GenerateHash } from './../utils/bcript';
+import { generateHash } from './../utils/bcript';
 
 describe('WebAPI test', () => {
   let browser: supertest.SuperTest<supertest.Test>;
@@ -25,7 +25,7 @@ describe('WebAPI test', () => {
     const users = [
       {
         email: admin.email,
-        password: await GenerateHash(admin.password),
+        password: await generateHash(admin.password),
         isAdmin: admin.isAdmin,
       },
     ];
@@ -115,23 +115,47 @@ describe('WebAPI test', () => {
     });
 
     test('登録', async done => {
-      const response = await browser
+      const responsePost = await browser
         .post('/users')
         .set({ 'x-access-token': token })
         .send(user1);
-      expect(response.status).toBe(201);
-      const responseUser: User = response.body;
+      expect(responsePost.status).toBe(201);
+      const postedUser = new User(responsePost.body);
 
-      const getUser = await browser
-        .get(`/users/${response.body.id}?scope=login`)
+      const responseGet = await browser
+        .get(`/users/${responsePost.body.id}?scope=login`)
         .set({ 'x-access-token': token });
-      const user: User = getUser.body;
-      expect(getUser.status).toBe(200);
-      expect(user.id).toBe(responseUser.id);
-      expect(user.email).toBe(responseUser.email);
-      expect(user.password).toBe(responseUser.password);
-      expect(user.isAdmin).toBe(responseUser.isAdmin);
-      expect(user.exp).toBe(responseUser.exp);
+      expect(responseGet.status).toBe(200);
+      const getUser = new User(responseGet.body);
+
+      expect(getUser.email).toBe(postedUser.email);
+      expect(getUser.password).toBe(postedUser.password);
+      expect(getUser.isAdmin).toBe(postedUser.isAdmin);
+      expect(getUser.exp).toBe(postedUser.exp);
+      done();
+    });
+
+    test('変更', async done => {
+      const responsePut = await browser
+        .put('/users/2')
+        .set({ 'x-access-token': token })
+        .send({ isAdmin: true });
+      expect(responsePut.status).toBe(200);
+      const putUser = new User(responsePut.body);
+      expect(putUser.email).toBe(user1.email);
+      expect(putUser.isAdmin).not.toBe(user1.isAdmin);
+      done();
+    });
+
+    test('パスワード変更', async done => {
+      const responsePut = await browser
+        .put('/users/2')
+        .set({ 'x-access-token': token })
+        .send({ password: '0987654321' });
+      expect(responsePut.status).toBe(200);
+      const putUser = new User(responsePut.body);
+      expect(putUser.email).toBe(user1.email);
+      expect(putUser.comparePassword('0987654321')).toBeTruthy();
       done();
     });
   });

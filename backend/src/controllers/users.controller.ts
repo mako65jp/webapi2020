@@ -36,7 +36,10 @@ export class UsersController {
 
   public update(req: Request, res: Response): void {
     const userId = Number(req.params.id);
-    const update: UpdateOptions = { where: { id: userId }, limit: 1 };
+    const update: UpdateOptions = {
+      where: { id: userId },
+      individualHooks: true,
+    };
 
     const scope = req.query['scope'] || 'defaultScope';
     User.scope(scope)

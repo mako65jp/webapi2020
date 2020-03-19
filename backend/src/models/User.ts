@@ -1,5 +1,8 @@
 import {
   AllowNull,
+  BeforeBulkCreate,
+  BeforeBulkUpdate,
+  BeforeSave,
   Column,
   Default,
   DefaultScope,
@@ -14,16 +17,11 @@ import { compareHash, generateHash } from './../utils/bcript';
   order: [['id', 'ASC']],
 })
 @Scopes({
-  login: { attributes: { include: ['password'] } },
+  withPassword: { attributes: { include: ['password'] } },
 })
 @Table({
   tableName: 'Users',
   timestamps: true,
-  hooks: {
-    beforeSave: async function(user: User) {
-      user.set('password', await User.passwordToHash(user.password));
-    },
-  },
 })
 export class User extends Model<User> {
   @AllowNull(false)
@@ -39,21 +37,27 @@ export class User extends Model<User> {
   @Column
   isAdmin!: boolean;
 
-  @AllowNull(true)
-  @Default(new Date(0))
-  @Column
-  exp!: Date;
-
-  comparePassword(password: string) {
-    return compareHash(password, this.password);
+  @BeforeSave
+  static async BeforeSave(user: User): Promise<void> {
+    if (user.password) {
+      user.password = await generateHash(user.password);
+    }
   }
 
-  setExprationTime(exprationTime: number) {
-    this.setDataValue('exp', new Date(exprationTime));
-    return this;
+  @BeforeBulkCreate
+  static BeforeBulkCreate(): void {
+    return;
   }
 
-  static async passwordToHash(password: string) {
-    return await generateHash(password);
+  @BeforeBulkUpdate
+  static BeforeBulkUpdate(): void {
+    return;
+  }
+
+  static async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await compareHash(password, hashedPassword);
   }
 }

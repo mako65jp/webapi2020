@@ -2,7 +2,6 @@ import * as supertest from 'supertest';
 import app from '../app';
 import database from '../config/database';
 import { User } from '../models/User';
-import { generateHash } from './../utils/bcript';
 
 describe('WebAPI test', () => {
   let browser: supertest.SuperTest<supertest.Test>;
@@ -22,14 +21,7 @@ describe('WebAPI test', () => {
   beforeAll(async done => {
     browser = supertest(app);
 
-    const users = [
-      {
-        email: admin.email,
-        password: await generateHash(admin.password),
-        isAdmin: admin.isAdmin,
-      },
-    ];
-    await User.bulkCreate(users);
+    await User.bulkCreate([admin]);
 
     const response = await browser.post('/login').send({
       email: admin.email,
@@ -69,9 +61,9 @@ describe('WebAPI test', () => {
   });
 
   describe('パスワードは隠蔽できているか？', () => {
-    test('ログインスコープならパスワードを取得できる', async done => {
+    test('スコープを指定すれば、パスワードを取得できる', async done => {
       const response = await browser
-        .get('/users?scope=login')
+        .get('/users?scope=withPassword')
         .set({ 'x-access-token': token });
       expect(response.status).toBe(200);
       const users: User[] = response.body;
@@ -81,7 +73,7 @@ describe('WebAPI test', () => {
       done();
     });
 
-    test('ログインスコープ以外ではパスワードを取得できない', async done => {
+    test('スコープを指定しなければ、パスワードを取得できない', async done => {
       const response = await browser
         .get('/users')
         .set({ 'x-access-token': token });
@@ -123,15 +115,16 @@ describe('WebAPI test', () => {
       const postedUser = new User(responsePost.body);
 
       const responseGet = await browser
-        .get(`/users/${responsePost.body.id}?scope=login`)
+        .get(`/users/2?scope=withPassword`)
         .set({ 'x-access-token': token });
       expect(responseGet.status).toBe(200);
       const getUser = new User(responseGet.body);
 
       expect(getUser.email).toBe(postedUser.email);
-      expect(getUser.password).toBe(postedUser.password);
+      expect(
+        await User.comparePassword(postedUser.password, getUser.password),
+      ).toBeTruthy();
       expect(getUser.isAdmin).toBe(postedUser.isAdmin);
-      expect(getUser.exp).toBe(postedUser.exp);
       done();
     });
 
@@ -153,9 +146,16 @@ describe('WebAPI test', () => {
         .set({ 'x-access-token': token })
         .send({ password: '0987654321' });
       expect(responsePut.status).toBe(200);
-      const putUser = new User(responsePut.body);
-      expect(putUser.email).toBe(user1.email);
-      expect(putUser.comparePassword('0987654321')).toBeTruthy();
+
+      const responseGet = await browser
+        .get(`/users/2?scope=withPassword`)
+        .set({ 'x-access-token': token });
+      expect(responseGet.status).toBe(200);
+      const getUser = new User(responseGet.body);
+      expect(getUser.email).toBe(user1.email);
+      expect(
+        await User.comparePassword('0987654321', getUser.password),
+      ).toBeTruthy();
       done();
     });
   });

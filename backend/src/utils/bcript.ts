@@ -12,7 +12,7 @@ export const compareHash = async (
 ): Promise<boolean> => {
   try {
     return await bcrypt.compare(data, hashedData);
-  } catch (e) {
+  } catch {
     return false;
   }
 };

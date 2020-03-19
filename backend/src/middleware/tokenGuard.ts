@@ -1,7 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import { VerifyToken } from '../utils/authenticate';
+import { verifyToken } from '../utils/jwt';
 
-export const tokenGuard = (req: Request, res: Response, next: NextFunction) => {
+export const tokenGuard = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   // get token from body:token or query:token of Http Header:x-access-token
   const token: string =
     req.headers['x-access-token'] || req.body.token || req.query.token;
@@ -12,7 +16,7 @@ export const tokenGuard = (req: Request, res: Response, next: NextFunction) => {
     return;
   }
 
-  const payload = VerifyToken(token) as string | string[] | undefined;
+  const payload = verifyToken(token) as string | string[] | undefined;
   if (!payload) {
     res.status(404).send({ success: false, message: 'No token provided.' });
     return;

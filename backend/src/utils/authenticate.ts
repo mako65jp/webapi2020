@@ -1,16 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/User';
-import { generateToken, decodeToken } from './jwt';
-
-const getExprationTime = (payload: any) => {
-  if (!payload || !payload.exp) {
-    return 0;
-  }
-  return payload.exp * 1000;
-};
+import { generateToken } from './jwt';
 
 export const Varidation = () => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const errMessage = [];
 
     const email = '' + req.body['email'];
@@ -40,12 +33,16 @@ export const Varidation = () => {
 };
 
 export const Authentication = () => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const email = req.body['email'];
       const userPass = req.body['password'];
 
-      const users = await User.scope('login').findAll({
+      const users = await User.scope('withPassword').findAll({
         where: { email: email },
       });
 
@@ -59,23 +56,19 @@ export const Authentication = () => {
       }
 
       const user = new User(users[0]);
-      if (await user.comparePassword(userPass)) {
+      if (await User.comparePassword(userPass, user.password)) {
         const token = generateToken({
           id: users[0].id,
           email: email,
           isAdmin: user.isAdmin,
         });
-        const exprationTime = getExprationTime(decodeToken(token));
-        user.setExprationTime(exprationTime).save();
 
-        if (exprationTime > 0) {
-          res.json({
-            success: true,
-            message: 'Authentication successfully finished.',
-            token: token,
-          });
-          return;
-        }
+        res.json({
+          success: true,
+          message: 'Authentication successfully finished.',
+          token: token,
+        });
+        return;
       }
 
       // 404 Not Found
@@ -87,18 +80,4 @@ export const Authentication = () => {
       next(e);
     }
   };
-};
-
-export const VerifyToken = (token: string) => {
-  const payload = decodeToken(token);
-  if (!payload) {
-    return;
-  }
-
-  const exp = getExprationTime(payload);
-  if (exp > new Date().valueOf()) {
-    return payload;
-  }
-
-  return;
 };

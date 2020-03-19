@@ -2,15 +2,15 @@ import {
   AllowNull,
   BeforeBulkCreate,
   BeforeBulkUpdate,
-  BeforeSave,
   Column,
   Default,
   DefaultScope,
   Model,
   Scopes,
   Table,
+  BeforeSave,
 } from 'sequelize-typescript';
-import { compareHash, generateHash } from './../utils/bcript';
+import { generateHash } from './../utils/bcrypt';
 
 @DefaultScope({
   attributes: { exclude: ['password'] },
@@ -38,26 +38,22 @@ export class User extends Model<User> {
   isAdmin!: boolean;
 
   @BeforeSave
-  static async BeforeSave(user: User): Promise<void> {
+  static BeforeSave(user: User): void {
+    console.log('@BeforeSave');
     if (user.password) {
-      user.password = await generateHash(user.password);
+      user.set('password', generateHash(user.password));
     }
   }
 
   @BeforeBulkCreate
   static BeforeBulkCreate(): void {
-    return;
+    console.log('@BeforeBulkCreate:');
+    // console.log(options);
   }
 
   @BeforeBulkUpdate
-  static BeforeBulkUpdate(): void {
-    return;
-  }
-
-  static async comparePassword(
-    password: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return await compareHash(password, hashedPassword);
+  static hooksBeforeBulkUpdate(): void {
+    console.log('@BeforeBulkUpdate:');
+    // console.log(options);
   }
 }

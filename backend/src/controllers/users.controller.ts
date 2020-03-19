@@ -50,28 +50,14 @@ export class UsersController {
 
   public delete(req: Request, res: Response): void {
     const userId = Number(req.params.id);
-    const options: DestroyOptions = {
-      where: { id: userId },
-      limit: 1,
-    };
+    const options: DestroyOptions = { where: { id: userId } };
 
     User.destroy(options)
       .then(() => res.status(204).json({ data: 'success' }))
       .catch((err: Error) => res.status(500).json(err));
   }
 
-  public logout(req: Request, res: Response): void {
-    if (!req.headers.payload) {
-      res.redirect('/login');
-      return;
-    }
-
-    const payload = req.headers.payload as any;
-    const userId = Number(payload.id);
-    const update: UpdateOptions = { where: { id: userId }, limit: 1 };
-
-    User.update({ exp: new Date(0) }, update)
-      .then(() => res.redirect('/login'))
-      .catch((err: Error) => res.status(500).json(err));
+  public logout(_req: Request, res: Response): void {
+    res.redirect('/login');
   }
 }

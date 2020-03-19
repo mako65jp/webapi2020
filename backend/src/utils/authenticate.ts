@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/User';
+import { compareHash } from './bcrypt';
 import { generateToken } from './jwt';
 
 export const Varidation = () => {
@@ -48,19 +49,17 @@ export const Authentication = () => {
 
       if (users.length != 1) {
         // 404 Not Found
-        res.status(404).json({
-          success: false,
-          message: 'Authentication failed.',
-        });
+        res
+          .status(404)
+          .json({ success: false, message: 'Authentication failed.' });
         return;
       }
 
-      const user = new User(users[0]);
-      if (await User.comparePassword(userPass, user.password)) {
+      if (await compareHash(userPass, users[0].password)) {
         const token = generateToken({
           id: users[0].id,
           email: email,
-          isAdmin: user.isAdmin,
+          isAdmin: users[0].isAdmin,
         });
 
         res.json({
@@ -71,11 +70,13 @@ export const Authentication = () => {
         return;
       }
 
+      console.log('compare password NG');
+
       // 404 Not Found
-      res.status(404).json({
-        success: false,
-        message: 'Authentication failed.',
-      });
+      res
+        .status(404)
+        .json({ success: false, message: 'Authentication failed.' });
+      return;
     } catch (e) {
       next(e);
     }

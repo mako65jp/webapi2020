@@ -2,6 +2,7 @@ import * as supertest from 'supertest';
 import app from '../app';
 import database from '../config/database';
 import { User } from '../models/User';
+import { compareHash } from './../utils/bcrypt';
 
 describe('WebAPI test', () => {
   let browser: supertest.SuperTest<supertest.Test>;
@@ -21,14 +22,14 @@ describe('WebAPI test', () => {
   beforeAll(async done => {
     browser = supertest(app);
 
-    await User.bulkCreate([admin]);
+    await User.create(admin);
 
     const response = await browser.post('/login').send({
       email: admin.email,
       password: admin.password,
     });
     token = response.body.token;
-
+    console.log(token);
     done();
   });
 
@@ -44,8 +45,57 @@ describe('WebAPI test', () => {
         email: admin.email,
         password: admin.password,
       });
+
       expect(response.status).toBe(200);
       expect(response.body.success).toBeTruthy();
+      done();
+    });
+
+    test('未登録アカウント', async done => {
+      const response = await browser.post('/login').send({
+        email: 'sdkfjsd',
+        password: '123456789',
+      });
+      expect(response.status).toBe(404);
+      expect(response.body.success).not.toBeTruthy();
+      done();
+    });
+
+    test('アカウント空', async done => {
+      const response = await browser.post('/login').send({
+        email: '',
+        password: '123456789',
+      });
+      expect(response.status).toBe(404);
+      expect(response.body.success).not.toBeTruthy();
+      done();
+    });
+
+    test('アカウントなし', async done => {
+      const response = await browser.post('/login').send({
+        password: '123456789',
+      });
+      expect(response.status).toBe(404);
+      expect(response.body.success).not.toBeTruthy();
+      done();
+    });
+
+    test('パスワード空', async done => {
+      const response = await browser.post('/login').send({
+        email: admin.email,
+        password: '',
+      });
+      expect(response.status).toBe(404);
+      expect(response.body.success).not.toBeTruthy();
+      done();
+    });
+
+    test('パスワードなし', async done => {
+      const response = await browser.post('/login').send({
+        email: admin.email,
+      });
+      expect(response.status).toBe(404);
+      expect(response.body.success).not.toBeTruthy();
       done();
     });
 
@@ -87,6 +137,20 @@ describe('WebAPI test', () => {
   });
 
   describe('Userモデル', () => {
+    test('JWTなしでユーザ一覧取得：失敗', async done => {
+      const response = await browser.get('/users/');
+      expect(response.status).toBe(404);
+      done();
+    });
+
+    test('不正なJWTでユーザ一覧取得：失敗', async done => {
+      const response = await browser
+        .get('/users/')
+        .set({ 'x-access-token': 'lskjdfonwoe' });
+      expect(response.status).toBe(404);
+      done();
+    });
+
     test('Id指定取得', async done => {
       const response = await browser
         .get('/users/1')
@@ -121,22 +185,8 @@ describe('WebAPI test', () => {
       const getUser = new User(responseGet.body);
 
       expect(getUser.email).toBe(postedUser.email);
-      expect(
-        await User.comparePassword(postedUser.password, getUser.password),
-      ).toBeTruthy();
+      expect(compareHash(user1.password, getUser.password)).toBeTruthy();
       expect(getUser.isAdmin).toBe(postedUser.isAdmin);
-      done();
-    });
-
-    test('変更', async done => {
-      const responsePut = await browser
-        .put('/users/2')
-        .set({ 'x-access-token': token })
-        .send({ isAdmin: true });
-      expect(responsePut.status).toBe(200);
-      const putUser = new User(responsePut.body);
-      expect(putUser.email).toBe(user1.email);
-      expect(putUser.isAdmin).not.toBe(user1.isAdmin);
       done();
     });
 
@@ -145,7 +195,7 @@ describe('WebAPI test', () => {
         .put('/users/2')
         .set({ 'x-access-token': token })
         .send({ password: '0987654321' });
-      expect(responsePut.status).toBe(200);
+      expect(responsePut.status).toBe(202);
 
       const responseGet = await browser
         .get(`/users/2?scope=withPassword`)
@@ -153,9 +203,56 @@ describe('WebAPI test', () => {
       expect(responseGet.status).toBe(200);
       const getUser = new User(responseGet.body);
       expect(getUser.email).toBe(user1.email);
-      expect(
-        await User.comparePassword('0987654321', getUser.password),
-      ).toBeTruthy();
+      expect(compareHash('0987654321', getUser.password)).toBeTruthy();
+      done();
+    });
+
+    test('変更', async done => {
+      const responseBefore = await browser
+        .get('/users/1?scope=withPassword')
+        .set({ 'x-access-token': token });
+      expect(responseBefore.status).toBe(200);
+
+      console.log(responseBefore.body.password);
+
+      const userBefore = new User(responseBefore.body);
+
+      const updateUser = { email: userBefore.email + 'update' };
+      const response = await browser
+        .put('/users/1')
+        .set({ 'x-access-token': token })
+        .send(updateUser);
+      expect(response.status).toBe(202);
+
+      const responseAfter = await browser
+        .get('/users/1?scope=withPassword')
+        .set({ 'x-access-token': token });
+      expect(responseAfter.status).toBe(200);
+
+      console.log(responseAfter.body.password);
+
+      const userAfter = new User(responseAfter.body);
+      expect(responseAfter.body.id).toBe(responseAfter.body.id);
+      expect(userAfter.email).toBe(updateUser.email);
+      expect(compareHash(admin.password, userAfter.password)).toBeTruthy();
+      expect(userAfter.isAdmin).toBe(userBefore.isAdmin);
+      done();
+    });
+
+    test('削除', async done => {
+      const response = await browser
+        .delete('/users/1')
+        .set({ 'x-access-token': token });
+      expect(response.status).toBe(204);
+      done();
+    });
+
+    test('ログアウト', async done => {
+      const response = await browser
+        .get('/users/logout')
+        .set({ 'x-access-token': token });
+
+      console.log(response.status);
       done();
     });
   });

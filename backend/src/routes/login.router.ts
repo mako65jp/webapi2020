@@ -5,10 +5,10 @@ const loginRouter = Router();
 
 loginRouter
   .post('/', Varidation(), Authentication())
-  .all('/', (_req, res, next) => {
+  .all('/', (_req, res, _next) => {
     // 501 Not Implemented
     res.sendStatus(501);
-    next();
+    // next();
   });
 
 export default loginRouter;

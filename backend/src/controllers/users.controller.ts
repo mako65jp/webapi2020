@@ -58,6 +58,7 @@ export class UsersController {
   }
 
   public logout(_req: Request, res: Response): void {
-    res.redirect('/login');
+    const message = 'Logout.';
+    res.status(511).send(message);
   }
 }

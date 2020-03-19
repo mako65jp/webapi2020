@@ -10,7 +10,7 @@ usersRouter
   .post(usersController.create);
 
 usersRouter
-  .route('/:id')
+  .route('/:id(\\d+)')
   .get(usersController.show)
   .put(usersController.update)
   .delete(usersController.delete);

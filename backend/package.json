@@ -12,7 +12,7 @@
     "clean": "rm -Rf ./dist",
     "rebuild": "npm run clean && npm run build",
     "pretest": "export NODE_ENV=test; sequelize db:drop; sequelize db:create; sequelize db:migrate;",
-    "test": "export NODE_ENV=test; jest --coverage --verbose;"
+    "test": "export NODE_ENV=test; jest --coverage --verbose"
   },
   "dependencies": {
     "bcrypt": "^4.0.1",

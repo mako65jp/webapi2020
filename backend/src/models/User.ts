@@ -2,13 +2,13 @@ import {
   AllowNull,
   BeforeBulkCreate,
   BeforeBulkUpdate,
+  BeforeSave,
   Column,
   Default,
   DefaultScope,
   Model,
   Scopes,
   Table,
-  BeforeSave,
 } from 'sequelize-typescript';
 import { generateHash } from './../utils/bcrypt';
 
@@ -46,14 +46,12 @@ export class User extends Model<User> {
   }
 
   @BeforeBulkCreate
-  static BeforeBulkCreate(): void {
-    console.log('@BeforeBulkCreate:');
-    // console.log(options);
+  static hooksBeforeBulkCreate(): void {
+    // console.log('@BeforeBulkCreate:');
   }
 
   @BeforeBulkUpdate
   static hooksBeforeBulkUpdate(): void {
-    console.log('@BeforeBulkUpdate:');
-    // console.log(options);
+    // console.log('@BeforeBulkUpdate:');
   }
 }

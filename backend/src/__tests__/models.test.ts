@@ -30,6 +30,7 @@ describe('WebAPI test', () => {
     });
     token = response.body.token;
     console.log(token);
+
     done();
   });
 
@@ -252,7 +253,7 @@ describe('WebAPI test', () => {
         .get('/users/logout')
         .set({ 'x-access-token': token });
 
-      console.log(response.status);
+      expect(response.status).toBe(511);
       done();
     });
   });
